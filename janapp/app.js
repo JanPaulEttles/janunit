@@ -40,6 +40,7 @@ server.get('/authenticated', function(req, res) {
 
 server.post('/forgotten', function(req, res) {
 	//console.log('you posted:  ' + JSON.stringify(req.body));
+	//console.log('Cookies: ', req.cookies);
 
 	res.setHeader('Content-Type', 'text/html; charset=utf-8');
 	res.setHeader('X-XSS-Protection', '0'); //ERR_BLOCKED_BY_XSS_AUDITOR
