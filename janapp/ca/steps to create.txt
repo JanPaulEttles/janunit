@@ -56,6 +56,22 @@ openssl verify -CAfile ca-crt.pem client-crt.pem
 
 
 
+revocate client cert
+
+touch ca-database.txt
+
+revoke cert
+openssl ca -revoke client-crt.pem -keyfile ca-key.pem -config ca.cnf -cert ca-crt.pem -passin 'pass:changeit'
+
+update the crl
+openssl ca -keyfile ca-key.pem -cert ca-crt.pem -config ca.cnf -gencrl -out ca-crl.pem -passin 'pass:changeit'
+
+
+
+
+
+
+
 
 
 

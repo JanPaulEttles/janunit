@@ -221,6 +221,10 @@ var httpsOptions = {
     rejectUnauthorized: false
 }
 
+//	crl: fs.readFileSync('./ca/ca-crl.pem'),
+//    rejectUnauthorized: true
+
+
 var server = https.createServer(httpsOptions, app).listen(app.get('port'), () => {
   console.log('server running on port ' + app.get('port'))
 })
