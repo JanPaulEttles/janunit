@@ -1,0 +1,69 @@
+https://engineering.circle.com/https-authorized-certs-with-node-js-315e548354a2
+
+
+
+
+
+create ca
+openssl req -new -x509 -days 9999 -config ca.cnf -keyout ca-key.pem -out ca-crt.pem
+
+create a server key
+openssl genrsa -out server-key.pem 4096
+
+create the csr
+openssl req -new -config server.cnf -key server-key.pem -out server-csr.pem
+
+sign the csr
+openssl x509 -req -extfile server.cnf -days 999 -passin "pass:changeit" -in server-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out server-crt.pem
+
+
+
+
+
+
+With the app running, fetch the cert
+echo QUIT | openssl s_client -connect localhost.ssl:3000 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > janunitcacert.pem
+Use the cert within curl to test
+curl --cacert janunitcacert.pem https://localhost.ssl:3000/index.html
+
+With the app running, and zap running, fetch the zap cert
+curl http://localhost:8080/OTHER/core/other/rootcert/?formMethod=GET > zap.pem
+test with curl specifying zap as the proxy
+curl --proxy localhost.ssl:8080 --cacert zap.pem https://localhost.ssl:3000/index.html
+
+You should see an entry in zap history
+
+
+create a jks for the jvm
+curl http://localhost:8080/OTHER/core/other/rootcert/?formMethod=GET > zap.pem
+keytool -import -alias localhost.ssl -keystore zap.jks -file zap.pem
+
+
+
+mutual ssl
+
+create the key
+openssl genrsa -out client-key.pem 4096
+
+create the csr
+openssl req -new -config client.cnf -key client-key.pem -out client-csr.pem
+
+sign it
+openssl x509 -req -extfile client.cnf -days 999 -passin "pass:changeit" -in client-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out client-crt.pem
+
+
+openssl verify -CAfile ca-crt.pem client-crt.pem
+
+
+
+
+
+
+
+
+
+
+
+
+
+
