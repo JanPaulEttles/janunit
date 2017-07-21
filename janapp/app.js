@@ -52,7 +52,6 @@ app.get('/login', function(req, res) {
 	}
 });
 
-
 /**
 *
 *	get request to check if the user is authenticated
@@ -116,8 +115,7 @@ app.get('/reset', function(req, res) {
 
 	db.clear();
 
-	res.setHeader('Content-Type', 'text/html; charset=utf-8');
-	res.setHeader('X-XSS-Protection', '0'); //ERR_BLOCKED_BY_XSS_AUDITOR
+	setHeaders(res);
 
 	req.session = null;
 	res.clearCookie('Session-Token', { path: '/' });
@@ -134,8 +132,7 @@ app.get('/reset', function(req, res) {
 */
 app.post('/forgotten', function(req, res) {
 
-	res.setHeader('Content-Type', 'text/html; charset=utf-8');
-	res.setHeader('X-XSS-Protection', '0'); //ERR_BLOCKED_BY_XSS_AUDITOR
+	setHeaders(res);
 	res.send("<div id=\"result\">Your password will be sent to: " + req.body.email + "</div>");
 });
 
@@ -148,8 +145,7 @@ app.post('/forgotten', function(req, res) {
 app.post('/search', function(req, res) {
 	//console.log('you posted:  ' + JSON.stringify(req.body));
 
-	res.setHeader('Content-Type', 'text/html; charset=utf-8');
-	res.setHeader('X-XSS-Protection', '0'); //ERR_BLOCKED_BY_XSS_AUDITOR
+	setHeaders(res);
 	res.send("<div id=\"result\">You searched: " + req.body.search + "</div>");
 });
 
@@ -161,22 +157,41 @@ app.post('/search', function(req, res) {
 */
 app.post('/login', function(req, res) {
  
-	var user = getUser(req.body.username);
 
-	if(user.username === req.body.username && user.password === req.body.password) { 
+	//' or 1=1--
+	//fake an SQLi vulnerability
+	if(req.body.username === '\' or 1=1--') {
+		//res.redirect('https://localhost.ssl:3000/tbl_users.db.txt');
 
-		refreshSession({
-			username: req.body.username,
-			authenticated: true
-			}, req, res);
+		var data = '';
+		var readStream = fs.createReadStream('tbl_users.db.txt', 'utf8');
 
 		setHeaders(res); 
-		res.send("<div id=\"result\">Welcome: "+ user.username + "</div>");
+		res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+		readStream.on('data', function(chunk) {  
+		    data += chunk;
+		}).on('end', function() {
+	    	res.send(data);
+		});
+
 	}
 	else {
-		res.send("<div id=\"result\">You are NOT authenticated</div>");
-	}
+		var user = getUser(req.body.username);
 
+		if(user.username === req.body.username && user.password === req.body.password) { 
+
+			refreshSession({
+				username: req.body.username,
+				authenticated: true
+				}, req, res);
+
+			setHeaders(res); 
+			res.send("<div id=\"result\">Welcome: "+ user.username + "</div>");
+		}
+		else {
+			res.send("<div id=\"result\">You are NOT authenticated</div>");
+		}
+	}
 
 });
 
