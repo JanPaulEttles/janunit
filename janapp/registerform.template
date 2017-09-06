@@ -1,10 +1,6 @@
-<html>
-	<head>
-		<title>Janapp Register</title>
-	<head>
-
-	<body>
-		<form action="/register" name="register" method="post">
+    <br>
+    <br>
+    <form action="/register" name="register" method="post">
 			<fieldset>
 				<label for="username">Username : </label>
 				<input type="text" id="username" name="username" placeholder="Enter Username" />
@@ -21,11 +17,8 @@
 				<label for="username">Last name : </label>
 				<input type="text" id="lastname" name="lastname" placeholder="Enter Last Name" />
 				<br/>
-
-				<input type="submit" id="submitregister" name="submitlogin" value="register" />
+				<input type="submit" id="submitregister" name="submitregister" value="register" />
 			</fieldset>
 		</form>
-	</body>
-</html>
-
-
+    <br>
+    <br>

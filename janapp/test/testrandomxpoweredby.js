@@ -1,4 +1,4 @@
-var randomXPoweredBy = require('./randomXPoweredBy');
+var randomXPoweredBy = require('../randomXPoweredBy');
 
 var frequency = [];
 for(var i = 0; i < 50; i++) {
@@ -7,7 +7,7 @@ for(var i = 0; i < 50; i++) {
 
 	if(frequency[rxpb] !== undefined) {
 		frequency[rxpb]++;
-	} 
+	}
 	else {
 		frequency[rxpb] = 1;
 	}

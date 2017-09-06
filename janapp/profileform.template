@@ -1,0 +1,18 @@
+    <br>
+    <br>
+    <form action="/profile" name="profile" method="post">
+			<fieldset>
+				<label for="email">Email : </label>
+				<input type="email" id="email" name="email" placeholder="Enter Email" />
+				<br/>
+				<label for="username">First Name : </label>
+				<input type="text" id="firstname" name="firstname" placeholder="Enter First Name" />
+				<br/>
+				<label for="username">Last name : </label>
+				<input type="text" id="lastname" name="lastname" placeholder="Enter Last Name" />
+				<br/>
+				<input type="submit" id="submitprofile" name="submitprofile" value="profile" />
+			</fieldset>
+		</form>
+    <br>
+    <br>

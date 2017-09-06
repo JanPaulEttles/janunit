@@ -1,10 +1,6 @@
-<html>
-	<head>
-		<title>Janapp Login</title>
-	<head>
-
-	<body>
-		<form action="/login" name="login" method="post">
+    <br>
+    <br>
+    <form action="/login" name="login" method="post">
 			<fieldset>
 				<label for="username">Username : </label>
 				<input type="text" id="username" name="username" placeholder="Enter Username" />
@@ -15,7 +11,5 @@
 				<input type="submit" id="submitlogin" name="submitlogin" value="login" />
 			</fieldset>
 		</form>
-	</body>
-</html>
-
-
+    <br>
+    <br>

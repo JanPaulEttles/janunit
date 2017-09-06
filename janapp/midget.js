@@ -2,7 +2,7 @@
 
 var sizeof = require( 'js-sizeof' );
 
-var TinyCache = function() {
+var midget = function() {
     var self = this;
     self._cache = {};
     self._timeouts = {};
@@ -13,22 +13,29 @@ var TinyCache = function() {
     return self;
 };
 
-TinyCache.prototype = {
+midget.prototype = {
     get size() {
         return this._size;
     },
     get memsize() {
-        return sizeof( this._cache ); /* Returns the approximate memory usage of all objects stored in the cache and cache overhead */
+        return sizeof( this._cache );
     },
     get hits() {
         return this._hits;
+    },
+    get keys() {
+      var keys = [];
+      for(var k in this._cache) {
+          keys.push(k);
+      }
+      return keys;
     },
     get misses() {
         return this._misses;
     }
 };
 
-TinyCache.prototype.put = function( key, value, time ) {
+midget.prototype.put = function( key, value, time ) {
     var self = this;
 
     if ( self._timeouts[ key ] ) {
@@ -37,7 +44,7 @@ TinyCache.prototype.put = function( key, value, time ) {
     }
 
     self._cache[ key ] = value;
-    
+
     if ( !isNaN( time ) ) {
         self._timeouts[ key ] = setTimeout( self.del.bind( self, key ), time );
     }
@@ -45,22 +52,22 @@ TinyCache.prototype.put = function( key, value, time ) {
     ++self._size;
 };
 
-TinyCache.prototype.del = function( key ) {
+midget.prototype.del = function( key ) {
     var self = this;
 
     clearTimeout( self._timeouts[ key ] );
     delete self._timeouts[ key ];
-    
+
     if ( !( key in self._cache )  ) {
         return false;
     }
-    
+
     delete self._cache[ key ];
     --self._size;
     return true;
 };
 
-TinyCache.prototype.clear = function() {
+midget.prototype.clear = function() {
     var self = this;
 
     for ( var key in self._timeouts ) {
@@ -72,13 +79,13 @@ TinyCache.prototype.clear = function() {
     self._size = 0;
 };
 
-TinyCache.prototype.get = function( key ) {
+midget.prototype.get = function( key ) {
     var self = this;
-    
+
     if ( typeof key === 'undefined' ) {
         return self._cache;
     }
-    
+
     if ( !( key in self._cache ) ) {
         ++self._misses;
         return null;
@@ -88,18 +95,4 @@ TinyCache.prototype.get = function( key ) {
     return self._cache[ key ];
 };
 
-TinyCache.shared = new TinyCache();
-
-if ( typeof module !== 'undefined' && module.exports ) {
-    module.exports = TinyCache;
-}
-else if ( typeof define === 'function' && define.amd ) {
-    /* global define */
-    define( [], function() {
-        return TinyCache;
-    } );
-}
-else {
-    /* global window */
-    window.TinyCache = TinyCache;
-}
+module.exports = midget;

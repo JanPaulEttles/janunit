@@ -1,18 +1,11 @@
-<html>
-	<head>
-		<title>Janapp Forgotten Password</title>
-	<head>
-
-	<body>
-		<form action="/forgotten" name="forgotten" method="post">
+    <br>
+    <br>
+    <form action="/forgotten" name="forgotten" method="post">
 			<fieldset>
 				<label for="email">Email : </label>
 				<input type="email" id="email" name="email" placeholder="Enter Email" />
-				<br/>
 				<input type="submit" id="submitforgotten" name="submitforgotten" value="forgotten" />
 			</fieldset>
 		</form>
-	</body>
-</html>
-
-
+    <br>
+    <br>

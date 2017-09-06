@@ -17,6 +17,7 @@ openssl x509 -req -extfile server.cnf -days 999 -passin "pass:changeit" -in serv
 
 
 With the app running, fetch the cert
+echo QUIT | openssl s_client -connect localhost.ssl:3000 > janunitcacert.pem
 echo QUIT | openssl s_client -connect localhost.ssl:3000 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > janunitcacert.pem
 Use the cert within curl to test
 curl --cacert janunitcacert.pem https://localhost.ssl:3000/index.html
