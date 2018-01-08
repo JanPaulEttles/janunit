@@ -1,0 +1,16 @@
+get the cert
+http://host:8080/OTHER/core/other/rootcert/?formMethod=GET
+
+enable http session tracking
+http://localhost:8080/JSON/core/action/setOptionHttpStateEnabled/?zapapiformat=JSON&formMethod=GET&Boolean=true
+
+get all the urls picked up during the period when functional tests ran
+curl "http://localhost:8080/JSON/core/view/urls/?zapapiformat=JSON&formMethod=GET" | json_pp
+
+curl "http://localhost:8080/JSON/ascan/action/scan/?zapapiformat=JSON&url=https://localhost.ssl:3000&recurse=True&inScopeOnly=True"
+
+curl "http://localhost:8080/JSON/ascan/action/scan/?zapapiformat=JSON&url=https://localhost.ssl:3000&recurse=True&inScopeOnly=True"
+curl "http://localhost:8080/JSON/ascan/view/status/?zapapiformat=JSON&formMethod=GET&scanId=0"
+curl "http://localhost:8080/OTHER/core/other/htmlreport/?formMethod=GET"
+curl "http://localhost:8080/JSON/ascan/action/scan/?zapapiformat=JSON&url=https://localhost.ssl:3000&recurse=True"
+

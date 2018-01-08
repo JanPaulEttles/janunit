@@ -5,9 +5,9 @@
   <body>
   <div>
   	<a href="/">Home</a> ||
-    <a href="searchform">Search</a> ||
-		<a href="authenticated">Authenticated</a> <!--||
-    <a href="reset">Reset</a>-->
+    <a href="/searchform">Search</a> ||
+		<a href="/authenticated">Authenticated</a> <!--||
+    <a href="/reset">Reset</a>-->
   </div>
   <br>
   <br>

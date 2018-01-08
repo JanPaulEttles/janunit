@@ -1,0 +1,143 @@
+package janunit.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FlowConfig {
+
+	private String name;
+	private String url;
+	private List<String> steps;
+
+	public FlowConfig() {
+	}
+
+	public FlowConfig(FlowConfig original) {
+		this.name = new String(original.name);
+	    this.url = new String(original.url);
+	    this.steps = new ArrayList<String>();
+		steps.addAll(original.steps);
+	}
+
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public List<String> getSteps() {
+		return steps;
+	}
+	public void setSteps(List<String> steps) {
+		this.steps = steps;
+	}
+}
+
+
+
+package janunit.model;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class StepConfig {
+
+	//name:register
+	//type:form
+	//url:/path/to/form
+	//data:in
+		//name1:testvalue2
+		//name2:testvalue2
+	//data:out/expect
+		//name1
+	//submit:buttonname
+
+	public StepConfig() {
+	}
+
+	//clone constructor
+	public StepConfig(StepConfig original) {
+	    this.name = new String(original.name);
+	    this.type = new String(original.type);
+	    this.url = new String(original.url);
+	    this.inputs = new HashMap<String, String>();
+		inputs.putAll(original.inputs);
+
+		this.submit = new String(original.submit);
+
+		this.expected = new HashMap<String, String>();
+		expected.putAll(original.expected);
+	}
+
+	private String name;
+	private String type;
+	private String url;
+	private Map<String, String> inputs;// = new HashMap<String, String>();
+	private String submit;
+	private String success;
+	private Map<String, String> expected;
+
+	public Map<String, String> getExpected() {
+		return expected;
+	}
+
+	public void setExpected(Map<String, String> expected) {
+		this.expected = expected;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	public Map<String, String> getInputs() {
+		return inputs;
+	}
+
+	public void setInputs(Map<String, String> inputs) {
+		this.inputs = inputs;
+	}
+
+	public String getSubmit() {
+		return submit;
+	}
+
+	public void setSubmit(String submit) {
+		this.submit = submit;
+	}
+
+	public String getSuccess() {
+		return success;
+	}
+
+	public void setSuccess(String success) {
+		this.success = success;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+}

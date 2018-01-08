@@ -1,0 +1,16 @@
+password is shown in plaintext on the profile page
+change password doesn't ask for the current password
+you can update someone else's profile, there is no check that the person updating a profule is the owner of that profile
+login can be via GET as well as POST
+no password policy on registration
+reflected xss - multiple
+persisted xss
+SQLi on username login ' or 1=1--
+admin UI exposed /admin
+Insecure Direct Object References
+session fixation - force a user to use a session id
+information leakage
+username enumeration - stack track when username not found
+email enumeration - on forgotten password form
+you can register a username that already exists, thus overwriting the user record
+forgotten response says your password will be sent to you, infers that they are stored in plain text

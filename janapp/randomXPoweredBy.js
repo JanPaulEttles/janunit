@@ -1,9 +1,25 @@
 'use strict';
 
+var logger = require('./logger');
+
 /**
 *  build a list of server stacks and return a random one
 */
-var xpoweredby = ["PHP/5.4.0", "Express", "PHP/5.1.3", "Microsoft-IIS/8.0", "Greyskull", "randomserver", "jboss", "apache"];
+var xpoweredby = [];
+
+var count = 0;
+var lineReader = require('readline').createInterface({
+	input: require('fs').createReadStream('xpoweredby.txt')
+});
+
+lineReader.on('line', function (line) {
+  count++;
+  xpoweredby.push(line);
+});
+lineReader.on('close', function (line) {
+  logger.trace('read ' + count + ' lines for xpoweredby.txt');
+});
+
 
 module.exports = {
 	getRandom: function() {

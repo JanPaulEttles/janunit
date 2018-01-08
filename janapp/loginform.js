@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs');
+var logger = require('./logger');
 
 var fragment = '';
 
@@ -14,11 +14,11 @@ lineReader.on('line', function (line) {
   fragment += line;
 });
 lineReader.on('close', function (line) {
-  console.log('read ' + count + ' lines for loginform.template');
+  logger.trace('read ' + count + ' lines for loginform.template');
 });
 
 module.exports = {
-	get: function(title) {
+	get: function() {
     return fragment;
   },
 	help: function() {

@@ -1,0 +1,20 @@
+    <br>
+    <br>
+    <form action="/profile/update" name="profile" method="post">
+    <input type="hidden" id="username" name="username">
+    <input type="hidden" id="password" name="password">
+			<fieldset>
+				<label for="email">Email : </label>
+				<input type="email" id="email" name="email" placeholder="Enter Email" />
+				<br/>
+				<label for="firstname">First Name : </label>
+				<input type="text" id="firstname" name="firstname" placeholder="Enter First Name" />
+				<br/>
+				<label for="lastname">Last name : </label>
+				<input type="text" id="lastname" name="lastname" placeholder="Enter Last Name" />
+				<br/>
+				<input type="submit" id="submitupdateprofile" name="submitupdateprofile" value="updateprofile" />
+			</fieldset>
+		</form>
+    <br>
+    <br>
