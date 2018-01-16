@@ -13,6 +13,7 @@ var uuid = require('node-uuid');
 var https = require('https')
 var fs = require('fs');
 
+
 var logger = require('./logger');
 var headers = require('./headers');
 
@@ -22,10 +23,10 @@ var foot = require('./foot');
 var forms = require('./forms');
 var utils = require('./utils');
 
-var sessiondatabase = require('./sessiondatabase');
+var sessionmanager = require('./sessionmanager');
+
 var userdatabase = require('./userdatabase');
 var notedatabase = require('./notedatabase');
-
 
 var app = express();
 app.set('port', 3000);
@@ -51,48 +52,28 @@ var server = https.createServer(httpsOptions, app).listen(app.get('port'), () =>
   logger.info('server running on port ' + app.get('port'))
 })
 
-
-
-/**
-* reset everything - todo
-*	https://localhost.ssl:3000/nuke
+/*
+* shared by both get and post login
 */
-app.get('/nuke', function(req, res) {
+function processLogin(username, password, req, res) {
+  logger.info('***** processLogin');
 
-  logger.info('***** get nuke BOOOOOOM!!!');
+  var user = userdatabase.getUser(username);
 
-	sessiondatabase.clear();
-  //userdatabase
-  //notedatabase
+  if(user === null) {
+    logger.warn('***** processLogin: username NOT found');
+  }
+  else {
+    sessionmanager.login(username, password, user, req, res);
+  }
+  res.redirect('/');
+}
 
-  req.session = null;
-	res.clearCookie('Session-Token', { path: '/' });
-
-	res.redirect('https://localhost.ssl:3000/');
-});
-
-/**
-*	https://localhost.ssl:3000/opensesame
-*/
-app.get('/opensesame', function(req, res) {
-  logger.trace('***** get login');
-		var data = '';
-		var readStream = fs.createReadStream('allissues.txt', 'utf8');
-
-		headers.set(res);
-		res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-		readStream.on('data', function(chunk) {
-		    data += chunk;
-		}).on('end', function() {
-	    	res.send(data);
-		});
-});
 
 /**
 *	https://localhost.ssl:3000/
 */
 app.get('/', function(req, res) {
-
   logger.info('***** home page');
 
   var content = '<b>YAVA :: Yet Another Vulnerable App</b>';
@@ -101,6 +82,69 @@ app.get('/', function(req, res) {
   sendResponse(req, res, 'Home Page', content);
 });
 
+/**
+* reset everything - todo
+*	https://localhost.ssl:3000/nuke
+*/
+app.get('/nuke', function(req, res) {
+  logger.info('***** get nuke BOOOOOOM!!!');
+
+	sessionmanager.clear(req, res);
+
+  //userdatabase
+  //notedatabase
+
+	res.redirect('/');
+});
+
+
+/**
+*
+*	get request to clear cache, session, cookies and redirect to index.html
+*	https://localhost:3000/reset
+*
+*/
+app.get('/reset', function(req, res) {
+  logger.info('***** get reset');
+
+	headers.set(res);
+
+	sessionmanager.clear();
+
+	req.session = null;
+	res.clearCookie('Session-Token', { path: '/' });
+
+	res.redirect('/');
+});
+
+
+/**
+*	https://localhost.ssl:3000/opensesame
+*/
+app.get('/opensesame', function(req, res) {
+  logger.info('***** get login');
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(utils.getAllIssues());
+});
+
+
+/**
+*	get request to check if the user is authenticated
+*	https://localhost:3000/authenticated
+*/
+app.get('/authenticated', function(req, res) {
+  logger.info('***** get authenticated');
+
+  var content = '';
+	if(!sessionmanager.isAuthenticated(req)) {
+		content += 'You are NOT authenticated';
+	}
+	else {
+    content += 'You are authenticated';
+	}
+  sendResponse(req, res, 'Authenticated Reponse', content);
+});
 
 /**
 *	https://localhost.ssl:3000/logout
@@ -108,32 +152,15 @@ app.get('/', function(req, res) {
 app.get('/logout', function(req, res) {
   logger.info('***** get logout');
 
-	if(!isAuthenticated(req)) {
-    logger.trace('logout: redirecting to homepage');
-    res.redirect('https://localhost.ssl:3000/');
-	}
-  else {
-
-    headers.set(res);
-
-    var session = { username: getUsernameFromToken(req), authenticated: false	};
-    refreshSession(session, req, res);
-
-    var response = head.get('Log Out Reponse');
-    response += getUserFragment(session, req, res);
-    response += foot.get();
-
-    res.send(response);
-  }
+  sessionmanager.logout(req, res);
+  res.redirect('/');
 });
-
 
 /**
 *	get request to view a user via admin interface
 *	https://localhost:3000//admin/user/profile/view
 */
 app.get('/admin/user/profile/view', function(req, res) {
-
   logger.info('***** get admin user profile');
 
   var user = userdatabase.getUser(req.query.username);
@@ -148,7 +175,6 @@ app.get('/admin/user/profile/view', function(req, res) {
   sendResponse(req, res, 'Admin User Profile Reponse', content);
 });
 
-
 /**
 *	get request to list all sessions
 *	https://localhost:3000/admin/sessions
@@ -156,7 +182,7 @@ app.get('/admin/user/profile/view', function(req, res) {
 app.get('/admin/sessions', function(req, res) {
   logger.info('***** get admin sessions');
 
-  var keys = sessiondatabase.getSessionTokens();
+  var keys = sessionmanager.getSessionTokens();
   var content = '';
   for(var i = 0; i < keys.length; ++i) {
         content += '<br><a href="/admin/session/view?token=' + keys[i] + '">' + keys[i] + '</a>';
@@ -182,33 +208,20 @@ app.get('/admin/users', function(req, res) {
   sendResponse(req, res, 'Admin Users Reponse', content);
 });
 
-
-
-
-
-/*
-* shared by both get and post login
+/**
+*	get request to display admin stuff
+*	https://localhost:3000/authenticated
 */
-function processLogin(username, password, req, res) {
+app.get('/admin', function(req, res) {
+  logger.info('***** get admin');
 
-  var user = userdatabase.getUser(username);
+  var content = '';
+  content += '<a href="/admin/users">Users</a><br>';
+  content += '<a href="/admin/sessions">Sessions</a><br>';
 
-  headers.set(res);
+  sendResponse(req, res, 'Admin Reponse', content);
+});
 
-  var response = head.get('Log In Reponse');
-  var session = { username: username, authenticated: false	};
-
-  //this is prone to a timing attack
-  if(user.username === username && user.password === password) {
-    session.authenticated = true;
-  }
-	refreshSession(session, req, res);
-
-  response += getUserFragment(session, req, res);
-  response += foot.get();
-
-  res.send(response);
-}
 
 /**
 *	https://localhost.ssl:3000/login?username=74n&password=password
@@ -223,45 +236,14 @@ app.get('/login', function(req, res) {
 */
 app.post('/login', function(req, res) {
   logger.trace('***** post login');
+
   if(utils.checkSQLi(req.body.username)) {
-		var data = '';
-		var readStream = fs.createReadStream('tbl_users.db.txt', 'utf8');
-
-		headers.set(res);
-		res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-		readStream.on('data', function(chunk) {
-		    data += chunk;
-		}).on('end', function() {
-	    	res.send(data);
-		});
-
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(utils.getSQLiTableDump());
 	}
 	else {
-    //logger.trace('XXXXX' + req.body.username + 'XXXXX');
 		processLogin(req.body.username, req.body.password, req, res);
 	}
-});
-
-
-
-/**
-*	get request to check if the user is authenticated
-*	https://localhost:3000/authenticated
-*/
-app.get('/authenticated', function(req, res) {
-
-  logger.info('***** get authenticated');
-
-  var session = getSessionFromRequest(req);
-  var content = '';
-  if(session.authenticated) {
-		content += 'You are authenticated';
-	}
-	else {
-    content += 'You are NOT authenticated';
-	}
-
-  sendResponse(req, res, 'Authenticated Reponse', content);
 });
 
 /**
@@ -272,11 +254,11 @@ app.get('/authenticated', function(req, res) {
 */
 app.get('/profile/view', function(req, res) {
 
-  logger.info('***** get profile/view ' + !isAuthenticated(req));
+  logger.info('***** get profile/view ' + sessionmanager.isAuthenticated(req));
 
-	if(!isAuthenticated(req)) {
+	if(!sessionmanager.isAuthenticated(req)) {
     logger.trace('profile/view: redirecting to homepage');
-    res.redirect('https://localhost.ssl:3000/');
+    res.redirect('/');
 	}
   else {
     var user = userdatabase.getUser(req.query.username);
@@ -285,9 +267,9 @@ app.get('/profile/view', function(req, res) {
 
     if(user !== null) {
       content += '<br>username : ' + user.username;
-
+      content += '<br>';
       content += '<br>password : ' + user.password;
-      content += '<br><a href="/changepasswordform">change</a><br>';
+      content += '<br><a href="/changepasswordform?username=' + user.username + '">change</a><br>';
 
       content += '<br>email : ' + user.email;
       content += '<br>firstname : ' + user.firstname;
@@ -303,20 +285,6 @@ app.get('/profile/view', function(req, res) {
 });
 
 
-/**
-*	get request to display admin stuff
-*	https://localhost:3000/authenticated
-*/
-app.get('/admin', function(req, res) {
-
-  logger.info('***** get admin');
-
-  var content = '';
-  content += '<a href="/admin/users">Users</a><br>';
-  content += '<a href="/admin/sessions">Sessions</a><br>';
-
-  sendResponse(req, res, 'Admin Reponse', content);
-});
 
 
 /**
@@ -326,12 +294,11 @@ app.get('/admin', function(req, res) {
 *
 */
 app.get('/notes/view', function(req, res) {
+  logger.info('***** get notes/view ' + sessionmanager.isAuthenticated(req));
 
-  logger.info('***** get notes/view ' + !isAuthenticated(req));
-
-	if(!isAuthenticated(req)) {
+	if(!sessionmanager.isAuthenticated(req)) {
     logger.trace('notes/view: redirecting');
-    res.redirect('https://localhost.ssl:3000/');
+    res.redirect('/');
 	}
   else {
 
@@ -358,20 +325,18 @@ app.get('/notes/view', function(req, res) {
 *	https://localhost:3000/notes/list
 */
 app.get('/notes/list', function(req, res) {
+  logger.info('***** get notes/list ' + sessionmanager.isAuthenticated(req));
 
-  logger.trace('***** get notes/list ' + !isAuthenticated(req));
-
-	if(!isAuthenticated(req)) {
+	if(!sessionmanager.isAuthenticated(req)) {
     logger.info('notes/list: redirecting');
-    res.redirect('https://localhost.ssl:3000/');
+    res.redirect('/');
 	}
   else {
     var keys = notedatabase.getNotes();
     logger.debug('#notes ' + keys.length);
     var content = '';
+    content += '<a href="/noteform">Create</a><br><br>';
     for(var i = 0; i < keys.length; ++i){
-      content += '<a href="/updatenoteform?note=' + notedatabase.getNote(keys[i]).id + '">Update</a>';
-      content += ' || ';
       content += '<a href="/notes/view?note=' + notedatabase.getNote(keys[i]).id + '">' + notedatabase.getNote(keys[i]).title + '</a><br>';
     }
   }
@@ -386,12 +351,11 @@ app.get('/notes/list', function(req, res) {
 *
 */
 app.post('/notes/create', function(req, res) {
+  logger.info('***** post note');
 
-  logger.trace('***** post note');
-
-  if(!isAuthenticated(req)) {
+  if(!sessionmanager.isAuthenticated(req)) {
     logger.info('notes/create: redirecting');
-    res.redirect('https://localhost.ssl:3000/');
+    res.redirect('/');
 	}
   else {
     notedatabase.putNote({
@@ -410,67 +374,50 @@ app.post('/notes/create', function(req, res) {
 
 /**
 *	parse updatenote form
-*	https://localhost:3000/updatenoteform
+*	https://localhost:3000/notes/update
 */
 app.post('/notes/update', function(req, res) {
-
   logger.info('***** post update note');
 
-  var session = getSessionFromRequest(req);
-	refreshSession(session, req, res);
-
   var note = notedatabase.getNote(req.body.id);
-  note.title = req.body.title;
-  note.note = req.body.note;
-  notedatabase.updateNote(note);
 
   var content = '';
-  content += 'The note has been updated.';
+  if(note !== null) {
+    note.title = req.body.title;
+    note.note = req.body.note;
+    notedatabase.updateNote(note);
+    content += 'The note has been updated.';
+  }
+  else {
+   content += 'The note could not be found.';
+  }
 
   sendResponse(req, res, 'Update Note Reponse', content);
-
 });
 
 
 /**
 *	parse updateprofile form
-*	https://localhost:3000/updateprofileform
+*	https://localhost:3000/profile/update
 */
 app.post('/profile/update', function(req, res) {
-
   logger.info('***** post update profile');
 
   var user = userdatabase.getUser(req.body.username);
-  user.password = req.body.password;
-  user.email = req.body.email;
-  user.firstname = req.body.firstname;
-  user.lastname = req.body.lastname;
-  userdatabase.putUser(user);
 
   var content = '';
-  content += 'Your profile has been updated.';
+  if(user !== null) {
+    user.password = req.body.password;
+    user.email = req.body.email;
+    user.firstname = req.body.firstname;
+    user.lastname = req.body.lastname;
+    userdatabase.putUser(user);
+    content += 'The user profile has been updated.';
+  }
+  else {
+     content += 'The user could not be found.';
+  }
   sendResponse(req, res, 'Update Profile Reponse', content);
-});
-
-
-/**
-*
-*	get request to clear cache, session, cookies and redirect to index.html
-*	https://localhost:3000/reset
-*
-*/
-app.get('/reset', function(req, res) {
-
-  logger.info('***** get reset');
-
-	headers.set(res);
-
-	sessiondatabase.clear();
-
-	req.session = null;
-	res.clearCookie('Session-Token', { path: '/' });
-
-	res.redirect('https://localhost.ssl:3000/');
 });
 
 
@@ -481,7 +428,6 @@ app.get('/reset', function(req, res) {
 *
 */
 app.post('/forgotten', function(req, res) {
-
   logger.info('***** post forgotten');
 
   var user = userdatabase.getUserByEmail(req.body.email);
@@ -514,23 +460,24 @@ app.post('/search', function(req, res) {
 *	https://localhost:3000/changepasswordform
 */
 app.post('/changepassword', function(req, res) {
-
   logger.info('***** post changepassword');
 
-var session = getSessionFromRequest(req);
-  var user = userdatabase.getUser(session.username);
-  user.password = req.body.password;
-  userdatabase.putUser(user);
+  var user = userdatabase.getUser(req.body.username);
 
-  var content = 'Your password has been changed.';
+  var content = '';
+  if(user !== null) {
 
+    user.password = req.body.password;
+    userdatabase.putUser(user);
+    content += 'Your password has been changed.';
+  }
+  else {
+     content += 'The user could not be found.';
+  }
   sendResponse(req, res, 'Change Password Reponse', content);
 });
 
-
-
 app.post('/register', function(req, res) {
-
   logger.info('***** post register');
 
   var user = {
@@ -541,7 +488,6 @@ app.post('/register', function(req, res) {
         	lastname  : ''
   };
 
-
   //user.username = req.body.username.replace('>','&gt;').replace('<','&lt;').replace('\\','\\\\');
   user.username = req.body.username;
   user.password = req.body.password;
@@ -551,33 +497,12 @@ app.post('/register', function(req, res) {
 
   //var dummyuser = utils.filterXSS(user);
 
-
 	userdatabase.putUser(user);
 
   var content = 'User: ' + user.username + ' has been registered.<br>An email has been sent to: ' + user.email + '<br>Please login to continue.';
 
   sendResponse(req, res, 'Register Resonse', content);
 });
-
-
-/*
-* Session Management
-*/
-function isAuthenticated(req) {
-	var token = req.cookies["Session-Token"];
-	if(token !== null) {
-		var session = sessiondatabase.getSession(token);
-		if(session !== null) {
-			logger.info('user ' + session.username + ' has a session: ' + session.authenticated);
-			return session.authenticated;
-		}
-	}
-	return false;
-}
-
-
-
-
 
 function getUserFragment(session, req, res) {
 
@@ -603,36 +528,7 @@ function getUserFragment(session, req, res) {
 
 
 
-function refreshSession(session, req, res) {
 
-  var token = req.cookies["Session-Token"];
-
-	if(req.cookies["Session-Token"] === undefined) {
-    token = sessiondatabase.createToken();
-    logger.trace("CREATING token: " + token);
-  }
-
-  sessiondatabase.putSession(token, session, 1800000);
-  //res.cookie('Session-Token', token, { maxAge: 1800000, httpOnly: true, secure: true });
-  res.cookie('Session-Token', token, { maxAge: 1800000 });
-  logger.trace("refreshed session: " + token + ' for ' + session.username + ' : isAuthenticated: ' + session.authenticated);
-}
-
-function getUsernameFromToken(req) {
-	return sessiondatabase.getSession(req.cookies["Session-Token"]).username;
-}
-
-function getSessionFromRequest(req) {
-
-  var session = { username: undefined, authenticated: false };
-
-  if(req.cookies["Session-Token"] !== null) {
-    if(sessiondatabase.getSession(req.cookies["Session-Token"]) !== null) {
-      session = sessiondatabase.getSession(req.cookies["Session-Token"]);
-    }
-  }
-	return session;
-}
 
 
 /**
@@ -647,7 +543,7 @@ app.get('/loginform', function(req, res) {
 *	https://localhost.ssl:3000/changepasswordform
 */
 app.get('/changepasswordform', function(req, res) {
-  getForm(req, res, 'Change Password Form', forms.changepassword);
+  updateForm(req, res, 'Change Password Form', forms.changepassword, userdatabase.getUser(req.query.username));
 });
 
 /**
@@ -700,54 +596,32 @@ app.get('/updateprofileform', function(req, res) {
 });
 
 function updateForm(req, res, title, form, object) {
-
   logger.trace('***** fetch form: ' + title);
 
-  headers.set(res);
-
-  var session = getSessionFromRequest(req);
-	refreshSession(session, req, res);
-
-  var response = head.get(title);
-  response += getUserFragment(session, req, res);
-  response += form.get(object);
-  response += foot.get();
-
-  res.send(response);
+  sendResponse(req, res, title, form.get(object));
 }
 
-
 function getForm(req, res, title, form) {
-
   logger.trace('***** fetch form: ' + title);
 
-  headers.set(res);
-
-  var session = getSessionFromRequest(req);
-	refreshSession(session, req, res);
-
-  var response = head.get(title);
-  response += getUserFragment(session, req, res);
-  response += form.get();
-  response += foot.get();
-
-  res.send(response);
+  sendResponse(req, res, title, form.get());
 }
 
 function sendResponse(req, res, title, content) {
-
   logger.info('***** sendResponse');
 
   headers.set(res);
 
-  var session = getSessionFromRequest(req);
-  refreshSession(session, req, res);
+  var session = sessionmanager.getSessionFromRequest(req);
+  sessionmanager.refresh(session, req, res);
 
   var response = head.get(title);
   response += getUserFragment(session, req, res);
+
   response += '<br><br><div id="content">';
   response += content;
   response += '<div>';
+
   response += foot.get();
 
   res.send(response);

@@ -18,8 +18,14 @@ lineReader.on('close', function (line) {
 });
 
 module.exports = {
-	get: function(title) {
-    return fragment;
+	get: function(user) {
+    logger.info('changepasswordform for user.username: ' + user.username);
+    var temp = fragment;
+
+    var index = temp.indexOf('id="username"');
+    temp = temp.substring(0, index) + ' value="' + user.username + '"' + temp.substring(index, temp.length);
+
+    return temp;
   },
 	help: function() {
 		// whatever

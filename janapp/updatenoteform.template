@@ -13,7 +13,7 @@
 				<input type="title" id="title" name="title" placeholder="Enter Title" />
 				<br/>
 				<label for="note">Note : </label>
-				<textarea  rows="8" cols="100" id="note" name="Note" placeholder="Enter Some Content"></textarea>
+				<textarea rows="8" cols="100" id="note" name="note" placeholder="Enter Some Content"></textarea>
 				<br/>
 				<input type="submit" id="submitupdatenote" name="submitupdatenote" value="updatenote" />
 			</fieldset>

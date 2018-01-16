@@ -1,16 +1,28 @@
 password is shown in plaintext on the profile page
 change password doesn't ask for the current password
 you can update someone else's profile, there is no check that the person updating a profule is the owner of that profile
+Insecure Direct Object References
 login can be via GET as well as POST
+login produces a stack trace for a username that does not exist
+you can change any valid user's password on the changepassword form
 no password policy on registration
 reflected xss - multiple
 persisted xss
 SQLi on username login ' or 1=1--
 admin UI exposed /admin
-Insecure Direct Object References
+reference another user by changing the username parameter on view profile
 session fixation - force a user to use a session id
+no pw on profile change
+no crsf protection
+pw shown in plaintext on profile page
+session token not changed on loging or logout
 information leakage
 username enumeration - stack track when username not found
 email enumeration - on forgotten password form
 you can register a username that already exists, thus overwriting the user record
 forgotten response says your password will be sent to you, infers that they are stored in plain text
+self-signed cert
+x-xss set to off
+username enumneration
+forgotten password has no email verification
+forgotten password message says the password is sent to the user

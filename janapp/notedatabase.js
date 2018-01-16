@@ -33,6 +33,7 @@ module.exports = {
   },
 	updateNote: function(note) {
       logger.debug('updating note : ' + note.title);
+      logger.debug('updating note : ' + note.note);
       notes.put(note.id, JSON.stringify(note));
   },
 	putNote: function(note) {

@@ -17,6 +17,36 @@ lineReader.on('close', function (line) {
   logger.trace('read ' + count + ' lines for sqli.txt');
 });
 
+var tdcount = 0;
+var tabledump = '';
+var lineReaderTableDump = require('readline').createInterface({
+	input: require('fs').createReadStream('tbl_users.db.txt', 'utf8')
+});
+
+lineReaderTableDump.on('line', function (line) {
+  tdcount++;
+  tabledump += line + '\n';
+
+});
+lineReaderTableDump.on('close', function (line) {
+  logger.trace('read ' + tdcount + ' lines for tbl_users.db.txt');
+});
+
+
+var aicount = 0;
+var allissues = '';
+var lineReaderAllIssues = require('readline').createInterface({
+	input: require('fs').createReadStream('allissues.txt', 'utf8')
+});
+
+lineReaderAllIssues.on('line', function (line) {
+  aicount++;
+  allissues += line + '\n';
+
+});
+lineReaderAllIssues.on('close', function (line) {
+  logger.trace('read ' + aicount + ' lines for allissues.txt');
+});
 
 module.exports = {
 	checkSQLi: function(parameter) {
@@ -33,6 +63,12 @@ module.exports = {
 
 		return vulnerable;
 	},
+  getSQLiTableDump: function() {
+    return tabledump;
+  },
+  getAllIssues: function() {
+    return allissues;
+  },
 	filterXSS: function(obj) {
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) {
